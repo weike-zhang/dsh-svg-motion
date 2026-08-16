@@ -26,10 +26,21 @@
     holder.innerHTML = svgMarkup.trim();
     const svg = holder.querySelector('svg');
     if (!svg) { throw new Error('no <svg> element in input'); }
+    // Move everything except <defs> into a scene <g>: the whole-mark intro
+    // (scale/rotate) applies to this group, keeping each shape's
+    // transform-origin in the group's coordinate system so it cannot be
+    // distorted by a transform on the svg root during screenshot.
+    const scene = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    scene.setAttribute('class', 'scene');
+    for (const child of Array.from(svg.childNodes)) {
+      const el = child.nodeType === 1 && child.tagName === 'defs' ? null : child;
+      if (el) scene.appendChild(el);
+    }
+    svg.appendChild(scene);
     stage.appendChild(svg);
 
     const shapeSel = 'path, circle, ellipse, rect, polygon, polyline, line';
-    const shapes = Array.from(svg.querySelectorAll(shapeSel));
+    const shapes = Array.from(scene.querySelectorAll(shapeSel));
     const hull = shapes[0] || null;
     const parts = shapes.slice(1).filter(Boolean);
 
@@ -42,6 +53,8 @@
     } else {
       svg.setAttribute('viewBox', '0 0 1080 1080');
     }
+    // ViewBox area in user units, used to classify shapes in logo intent.
+    const vbArea = vb && vb.length === 4 ? Math.abs(vb[2]) * Math.abs(vb[3]) : 1080 * 1080;
 
     const DUR = opts && opts.duration ? opts.duration : 3.0;      // seconds
     const FPS = 30;
@@ -64,6 +77,8 @@
     //    brand marks where splitting parts would break the silhouette.
     const intent = (opts && opts.intent) || 'assembly';
     const isLogo = intent === 'logo';
+    // Assembly-intent timing: hull appears between tH0 and tH1, parts follow.
+    const tH0 = 0.2, tH1 = 1.7, tP0 = 0.5, tP1 = 1.7;
 
     window.__renderFrame = function (p) {
       const t = p * DUR;
@@ -73,16 +88,37 @@
         const settle = easeOutBack(clamp01(t / 1.1));
         const sceneScale = 0.7 + 0.3 * settle;
         const rotate = (1 - settle) * -14;
-        svg.setAttribute('style', `transform: scale(${sceneScale}) rotate(${rotate}deg); transform-origin: 50% 50%;`);
+        scene.setAttribute('style', `transform: scale(${sceneScale}) rotate(${rotate}deg); transform-origin: 50% 50%;`);
 
-        const wings = hull ? [hull, ...parts] : parts;
-        // Wings open from center outward: each shape separates from the middle.
-        wings.forEach((el, i) => {
+        const shapes = hull ? [hull, ...parts] : parts;
+        // In logo intent, small marks (eyes, dots, accents) stay anchored on
+        // the face and only fade in, while large silhouettes (wings, body)
+        // open outward from center. Splitting by area keeps a face together
+        // and reads as "the mark opens up and looks at you".
+        const areaThreshold = 0.5; // percent of the viewBox area
+        const movers = [];
+        const anchors = [];
+        shapes.forEach((el) => {
+          let a = 0;
+          try {
+            const b = el.getBBox();
+            a = (b.width * b.height) / vbArea * 100;
+          } catch { a = 99; }
+          (a > areaThreshold ? movers : anchors).push(el);
+        });
+
+        // Anchored marks: fade in after the movers settle, no translation.
+        anchors.forEach((el, i) => {
+          const d = clamp01((t - 1.0 - i * 0.05) / 0.6);
+          const k = easeOutBack(d);
+          el.setAttribute('opacity', String(clamp01(d * 2.5)));
+          el.setAttribute('style', `transform: scale(${0.5 + 0.5 * k}); transform-origin: 50% 50%;`);
+        });
+
+        // Movers (large silhouettes): open outward from the center line.
+        movers.forEach((el, i) => {
           const d = clamp01((t - i * 0.06) / 1.4);
           const k = easeElastic(d);
-          // Side from the shape's geometry vs the viewBox center (48): a shape
-          // whose centroid is left of center opens left, right opens right,
-          // and a center shape (the core) stays put.
           let side = 0;
           try {
             const b = el.getBBox();
@@ -100,7 +136,7 @@
       // Scene-level intro: rotate + scale from 0.1 to 1 (power4.out feel).
       const sceneK = easeOutBack(clamp01((t - 0) / 1.2));
       const sceneScale = 0.1 + 0.9 * sceneK;
-      svg.setAttribute('style', `transform: scale(${sceneScale}) rotate(${(1 - sceneK) * -180}deg); transform-origin: 50% 50%;`);
+      scene.setAttribute('style', `transform: scale(${sceneScale}) rotate(${(1 - sceneK) * -180}deg); transform-origin: 50% 50%;`);
 
       if (hull) {
         const hK = easeElastic(clamp01((t - tH0) / (tH1 - tH0)));

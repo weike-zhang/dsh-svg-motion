@@ -97,12 +97,17 @@ export async function renderSvgAnimation(options: RenderOptions): Promise<Render
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ;(window as any).__renderFrame(p)
       }, progress)
-      // Screenshot the stage element directly: serializing the SVG and
-      // re-rendering it through <img> loses per-shape transform-origin
-      // fidelity, so we capture the live DOM paint instead.
-      const shot = await page.screenshot({ type: 'png', clip: { x: 0, y: 0, width: size, height: size } })
-      lastDataUrl = `data:image/png;base64,${shot.toString('base64')}`
-      await writeFile(join(framesDir, `frame_${String(i).padStart(4, '0')}.png`), shot)
+      // Serialize the SVG (transforms live on the inner scene <g>, never the
+      // svg root) and draw it to a canvas: this preserves per-shape
+      // transform-origin and renders eyes/anchors exactly where the SVG puts
+      // them, which a live-DOM screenshot does not.
+      const dataUrl = await page.evaluate(() => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return (window as any).__snapshotFrame()
+      })
+      lastDataUrl = dataUrl
+      const b64 = dataUrl.split(',')[1]
+      await writeFile(join(framesDir, `frame_${String(i).padStart(4, '0')}.png`), Buffer.from(b64, 'base64'))
     }
 
     // Poster = final assembled frame.
