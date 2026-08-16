@@ -38,6 +38,10 @@ export function apply(ctx: Context): void {
           required: true,
           description: 'Full SVG markup (an <svg>...</svg> document) to animate. You may also pass an absolute file path to an existing .svg file on this machine.',
         },
+        intent: {
+          type: 'string',
+          description: 'Animation intent: "assembly" (parts fly in and snap together) or "logo" (the whole mark settles, wings open outward). Default assembly.',
+        },
         duration: {
           type: 'number',
           description: 'Animation length in seconds. Default 3.0, max 8.0.',
@@ -62,6 +66,7 @@ export function apply(ctx: Context): void {
         const result = await renderSvgAnimation({
           svg,
           outDir,
+          intent: args.intent === 'logo' ? 'logo' : 'assembly',
           duration: clampDuration(args.duration),
           size: clampSize(args.size),
           video: args.video ?? true,

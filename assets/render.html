@@ -28,11 +28,10 @@
     if (!svg) { throw new Error('no <svg> element in input'); }
     stage.appendChild(svg);
 
-    const paths = Array.from(svg.querySelectorAll('path'));
-    const groups = Array.from(svg.querySelectorAll('g'));
-    const all = paths.concat(groups);
-    const hull = paths[0] || all[0] || null;
-    const parts = (paths.slice(1).length ? paths.slice(1) : all.slice(1)).filter(Boolean);
+    const shapeSel = 'path, circle, ellipse, rect, polygon, polyline, line';
+    const shapes = Array.from(svg.querySelectorAll(shapeSel));
+    const hull = shapes[0] || null;
+    const parts = shapes.slice(1).filter(Boolean);
 
     // The stage may have no intrinsic size; force 1080x1080 viewport for the
     // square tile default unless the SVG declares a viewBox we should respect.
@@ -58,12 +57,46 @@
     };
     const clamp01 = (v) => v < 0 ? 0 : v > 1 ? 1 : v;
 
-    const sceneProgress = clamp01;
-    // Hull appears between tH0 and tH1 (seconds); parts follow with stagger.
-    const tH0 = 0.2, tH1 = 1.7, tP0 = 0.5, tP1 = 1.7;
+    // Two animation intents:
+    //  - "assembly" (default): pieces fly in from off-screen and snap together.
+    //  - "logo": treat the whole mark as one object; wings open outward, the
+    //    core lights up, and the mark settles into place. Best for compact
+    //    brand marks where splitting parts would break the silhouette.
+    const intent = (opts && opts.intent) || 'assembly';
+    const isLogo = intent === 'logo';
 
     window.__renderFrame = function (p) {
       const t = p * DUR;
+
+      if (isLogo) {
+        // Overall settle: rotate from -14deg, scale from .7, ease out.
+        const settle = easeOutBack(clamp01(t / 1.1));
+        const sceneScale = 0.7 + 0.3 * settle;
+        const rotate = (1 - settle) * -14;
+        svg.setAttribute('style', `transform: scale(${sceneScale}) rotate(${rotate}deg); transform-origin: 50% 50%;`);
+
+        const wings = hull ? [hull, ...parts] : parts;
+        // Wings open from center outward: each shape separates from the middle.
+        wings.forEach((el, i) => {
+          const d = clamp01((t - i * 0.06) / 1.4);
+          const k = easeElastic(d);
+          // Side from the shape's geometry vs the viewBox center (48): a shape
+          // whose centroid is left of center opens left, right opens right,
+          // and a center shape (the core) stays put.
+          let side = 0;
+          try {
+            const b = el.getBBox();
+            side = b.x + b.width / 2 < 46 ? -1 : b.x + b.width / 2 > 50 ? 1 : 0;
+          } catch { side = i % 2 === 0 ? -1 : 1; }
+          el.setAttribute('opacity', String(clamp01(d * 2.2)));
+          el.setAttribute('style',
+            `transform: translate(${side * 30 * (1 - k)}px, 0) scale(${0.4 + 0.6 * k}); ` +
+            `transform-origin: 50% 50%;`);
+        });
+        return t;
+      }
+
+      // ── assembly intent (original) ──────────────────────────────────────
       // Scene-level intro: rotate + scale from 0.1 to 1 (power4.out feel).
       const sceneK = easeOutBack(clamp01((t - 0) / 1.2));
       const sceneScale = 0.1 + 0.9 * sceneK;

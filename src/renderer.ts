@@ -47,6 +47,11 @@ export interface RenderOptions {
   size?: number
   /** Whether to synthesize an MP4 with ffmpeg (default true). */
   video?: boolean
+  /**
+   * Animation intent: `assembly` (parts fly in and snap, default) or
+   * `logo` (a compact brand mark settles as one object, wings open outward).
+   */
+  intent?: 'assembly' | 'logo'
 }
 
 /**
@@ -62,6 +67,7 @@ export async function renderSvgAnimation(options: RenderOptions): Promise<Render
   const duration = options.duration ?? 3.0
   const size = options.size ?? 1080
   const wantVideo = options.video ?? true
+  const intent = options.intent ?? 'assembly'
   const outDir = options.outDir
   await mkdir(outDir, { recursive: true })
   const framesDir = join(outDir, 'frames')
@@ -73,21 +79,14 @@ export async function renderSvgAnimation(options: RenderOptions): Promise<Render
   try {
     const page = await browser.newPage({ viewport: { width: size, height: size }, deviceScaleFactor: 1 })
     await page.setContent(html, { waitUntil: 'load' })
-    const init = await page.evaluate((markup) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const w = window as any
-      w.__initSvg(markup, { duration: 3.0 })
-      return { frames: w.__frames ?? Math.ceil(3.0 * 30) }
-    }, svg)
-    void init
 
-    // Re-init with the real duration so the frame count matches.
-    const meta = await page.evaluate(([markup, dur]) => {
+    // Init once with the real duration so the frame count matches.
+    const meta = await page.evaluate(([markup, dur, it]) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const w = window as any
-      const result = w.__initSvg(markup, { duration: dur })
+      const result = w.__initSvg(markup, { duration: dur, intent: it })
       return { frames: result.frames, duration: result.duration }
-    }, [svg, duration])
+    }, [svg, duration, intent])
 
     const fps = 30
     // Render frame 0..frames-1 (the final frame is the assembled state).
@@ -98,32 +97,12 @@ export async function renderSvgAnimation(options: RenderOptions): Promise<Render
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ;(window as any).__renderFrame(p)
       }, progress)
-      const dataUrl = await page.evaluate(() => {
-        // Snapshot the stage SVG to a canvas and return a PNG data URL.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const w = window as any
-        if (w.__snapshotFrame) return w.__snapshotFrame()
-        const svg = document.querySelector('svg')!
-        const canvas = document.createElement('canvas')
-        canvas.width = document.documentElement.clientWidth
-        canvas.height = document.documentElement.clientHeight
-        const ctx = canvas.getContext('2d')!
-        const data = new XMLSerializer().serializeToString(svg)
-        const url = URL.createObjectURL(new Blob([data], { type: 'image/svg+xml;charset=utf-8' }))
-        return new Promise<string>((resolve) => {
-          const img = new Image()
-          img.onload = () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height)
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
-            URL.revokeObjectURL(url)
-            resolve(canvas.toDataURL('image/png'))
-          }
-          img.src = url
-        })
-      })
-      lastDataUrl = dataUrl
-      const b64 = dataUrl.split(',')[1]
-      await writeFile(join(framesDir, `frame_${String(i).padStart(4, '0')}.png`), Buffer.from(b64, 'base64'))
+      // Screenshot the stage element directly: serializing the SVG and
+      // re-rendering it through <img> loses per-shape transform-origin
+      // fidelity, so we capture the live DOM paint instead.
+      const shot = await page.screenshot({ type: 'png', clip: { x: 0, y: 0, width: size, height: size } })
+      lastDataUrl = `data:image/png;base64,${shot.toString('base64')}`
+      await writeFile(join(framesDir, `frame_${String(i).padStart(4, '0')}.png`), shot)
     }
 
     // Poster = final assembled frame.

@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>循智共创 Logo 网页动效演示</title>
+  <style>
+    :root { --ink:#211512; --brown:#3b2925; --gold:#f0a82e; --gold-hi:#ffca6c; --paper:#fffaf3; --muted:#8d776b; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; color:var(--ink); font-family:ui-sans-serif,system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; background:radial-gradient(circle at 72% 12%, #fff1d2 0 0, transparent 32%), var(--paper); }
+    .shell { width:min(1120px, calc(100% - 40px)); margin:auto; padding:52px 0 64px; }
+    header { display:flex; justify-content:space-between; align-items:end; gap:24px; margin-bottom:30px; }
+    h1 { margin:0; font-size:clamp(26px,4vw,44px); letter-spacing:-.04em; }
+    header p { max-width:420px; margin:0; color:var(--muted); line-height:1.65; font-size:14px; }
+    .stage { display:grid; grid-template-columns:1.05fr .95fr; gap:18px; }
+    .card { border:1px solid #eadfce; border-radius:28px; background:rgba(255,255,255,.66); box-shadow:0 20px 60px rgba(67,42,20,.08); }
+    .hero { min-height:440px; display:grid; place-items:center; position:relative; overflow:hidden; }
+    .hero:before { content:""; position:absolute; width:300px; height:300px; border-radius:50%; background:#ffd98d; filter:blur(65px); opacity:.24; }
+    .logo-button { position:relative; display:grid; place-items:center; width:230px; height:230px; border:0; border-radius:50%; background:transparent; cursor:pointer; outline:none; -webkit-tap-highlight-color:transparent; }
+    .logo-button:after { content:""; position:absolute; inset:28px; border:1px solid rgba(240,168,46,.0); border-radius:50%; transform:scale(.7); }
+    .logo-button svg { width:138px; height:118px; overflow:visible; position:relative; z-index:1; filter:drop-shadow(0 12px 12px rgba(65,35,15,.18)); }
+    .ring { position:absolute; inset:26px; border:1px solid rgba(240,168,46,.32); border-radius:50%; opacity:0; }
+    .ring.ring-2 { inset:48px; border-color:rgba(240,168,46,.18); }
+    .hint { position:absolute; bottom:24px; margin:0; font-size:12px; color:var(--muted); letter-spacing:.04em; }
+    .states { padding:26px; }
+    .states h2 { margin:0 0 18px; font-size:16px; }
+    .state-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+    button.state { min-height:74px; text-align:left; padding:14px; border:1px solid #eadfce; border-radius:16px; background:#fffdf9; color:var(--ink); cursor:pointer; transition:.2s ease; }
+    button.state:hover, button.state.active { border-color:#e3a638; box-shadow:0 8px 18px rgba(190,126,30,.12); transform:translateY(-1px); }
+    .state b { display:block; font-size:14px; margin-bottom:5px; }
+    .state span { display:block; font-size:12px; color:var(--muted); line-height:1.4; }
+    .spec { margin-top:18px; padding-top:18px; border-top:1px solid #eee3d4; color:var(--muted); font-size:12px; line-height:1.65; }
+    .status { position:absolute; top:22px; right:22px; z-index:2; display:flex; align-items:center; gap:7px; font-size:12px; color:var(--muted); }
+    .dot { width:7px; height:7px; border-radius:50%; background:var(--gold); box-shadow:0 0 0 5px rgba(240,168,46,.12); }
+
+    /* 基础待机：保留原 SVG 的双翼轻微汇聚与核心呼吸。 */
+    .xz-wing-left,.xz-wing-right,.xz-core { transform-box:fill-box; transform-origin:center; }
+    .logo-button.idle .xz-wing-left { animation:wing-left 2.4s ease-in-out infinite; }
+    .logo-button.idle .xz-wing-right { animation:wing-right 2.4s ease-in-out infinite; }
+    .logo-button.idle .xz-core { animation:core 2.4s ease-in-out infinite; }
+    @keyframes wing-left { 0%,100%{transform:translateX(0)} 42%,58%{transform:translateX(3px)} }
+    @keyframes wing-right { 0%,100%{transform:translateX(0)} 42%,58%{transform:translateX(-3px)} }
+    @keyframes core { 0%,100%{opacity:.94;transform:scale(1)} 42%,58%{opacity:1;transform:scale(1.055)} }
+    .logo-button.hover:hover svg { transform:translateY(-5px) scale(1.04); transition:transform .35s cubic-bezier(.2,.9,.25,1.2); }
+    .logo-button.hover:hover:after { animation:hoverHalo .8s ease-out forwards; }
+    @keyframes hoverHalo { to { opacity:1; transform:scale(1); border-color:rgba(240,168,46,.4); } }
+    .logo-button.loading .ring { opacity:1; border-top-color:transparent; animation:spin 1.1s linear infinite; }
+    .logo-button.loading .ring-2 { animation-direction:reverse; animation-duration:1.7s; opacity:.65; }
+    .logo-button.loading .xz-core { animation:loadPulse .9s ease-in-out infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    @keyframes loadPulse { 50% { transform:scale(1.13); filter:brightness(1.1); } }
+    .logo-button.success .ring { opacity:1; border-color:rgba(90,145,83,.45); animation:successRing .65s ease-out forwards; }
+    .logo-button.success .xz-core { animation:successCore .65s cubic-bezier(.2,1.6,.3,1) both; }
+    @keyframes successRing { 0%{transform:scale(.65);opacity:0} 60%{transform:scale(1.07);opacity:1} 100%{transform:scale(1);opacity:1} }
+    @keyframes successCore { 0%{transform:scale(.65)} 72%{transform:scale(1.16)} 100%{transform:scale(1)} }
+    .logo-button.error { animation:errorShake .45s ease-out; }
+    .logo-button.error .xz-wing-left { animation:errorLeft .45s ease-out; }
+    .logo-button.error .xz-wing-right { animation:errorRight .45s ease-out; }
+    .logo-button.error .xz-core { animation:errorCore .45s ease-out; }
+    @keyframes errorShake { 20%{transform:translateX(-8px)} 40%{transform:translateX(7px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(3px)} }
+    @keyframes errorLeft { 50%{transform:translateX(-6px) rotate(-4deg)} }
+    @keyframes errorRight { 50%{transform:translateX(6px) rotate(4deg)} }
+    @keyframes errorCore { 50%{filter:saturate(.5) brightness(.85)} }
+    .logo-button.click .xz-wing-left { animation:clickLeft .55s cubic-bezier(.2,.8,.3,1); }
+    .logo-button.click .xz-wing-right { animation:clickRight .55s cubic-bezier(.2,.8,.3,1); }
+    .logo-button.click .xz-core { animation:clickCore .55s cubic-bezier(.2,1.7,.3,1); }
+    .logo-button.click .ring { opacity:1; animation:clickRing .55s ease-out; }
+    @keyframes clickLeft { 35%{transform:translateX(-10px) rotate(-3deg)} 100%{transform:none} }
+    @keyframes clickRight { 35%{transform:translateX(10px) rotate(3deg)} 100%{transform:none} }
+    @keyframes clickCore { 35%{transform:scale(.82)} 70%{transform:scale(1.14)} 100%{transform:scale(1)} }
+    @keyframes clickRing { 0%{transform:scale(.65);opacity:.75} 100%{transform:scale(1.2);opacity:0} }
+    @media (prefers-reduced-motion:reduce) { *,*:before,*:after { animation-duration:.001ms !important; animation-iteration-count:1 !important; transition:none !important; } }
+    @media (max-width:760px) { .shell{padding-top:30px} header{display:block} header p{margin-top:12px} .stage{grid-template-columns:1fr} .hero{min-height:360px} }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div><h1>循智共创 · Logo motion</h1></div>
+      <p>一套面向平台网页的轻量交互动效：保持品牌的双翼与金色核心，补齐点击、等待、完成和异常反馈。</p>
+    </header>
+    <section class="stage">
+      <div class="card hero">
+        <div class="status"><i class="dot"></i><span id="statusText">待机中</span></div>
+        <button class="logo-button idle" id="logoButton" aria-label="点击播放 Logo 动效">
+          <span class="ring"></span><span class="ring ring-2"></span>
+          <svg viewBox="0 0 96 82" role="img" aria-label="循智共创标志">
+            <defs>
+              <linearGradient id="wingL" x1="-1" y1="8" x2="43" y2="76" gradientUnits="userSpaceOnUse"><stop stop-color="#3B2925"/><stop offset="1" stop-color="#211512"/></linearGradient>
+              <linearGradient id="wingR" x1="51" y1="0" x2="98" y2="82" gradientUnits="userSpaceOnUse"><stop stop-color="#3B2925"/><stop offset="1" stop-color="#211512"/></linearGradient>
+              <linearGradient id="coreG" x1="25" y1="19" x2="68" y2="62" gradientUnits="userSpaceOnUse"><stop stop-color="#FFCA6C"/><stop offset="1" stop-color="#E19213"/></linearGradient>
+            </defs>
+            <g class="xz-wing-left"><path d="M27.3815 8.41235L38.598 19.6289L17.9794 40.9072L40.9073 64.0001V75.5465H29.8557L0 45.5258V35.7938L27.3815 8.41235Z" fill="url(#wingL)"/></g>
+            <g class="xz-wing-right"><path d="M50.969 0H61.5257L96 34.6392V45.5258L61.5257 81.6496H54.5979V61.8558L75.3814 40.9073L50.969 16.165V0Z" fill="url(#wingR)"/></g>
+            <g class="xz-core"><path d="M47.0104 19.4641L67.7939 40.9074L47.0104 62.3508L25.4021 40.9074L47.0104 19.4641Z" fill="url(#coreG)"/></g>
+          </svg>
+        </button>
+        <p class="hint">点击 Logo 试试 · 可用键盘 Enter / Space</p>
+      </div>
+      <div class="card states">
+        <h2>交互状态</h2>
+        <div class="state-grid">
+          <button class="state active" data-state="idle"><b>待机 / Idle</b><span>页面常驻，轻微呼吸与汇聚</span></button>
+          <button class="state" data-state="hover"><b>悬停 / Hover</b><span>光环展开，Logo 轻抬</span></button>
+          <button class="state" data-state="click"><b>点击 / Press</b><span>双翼外弹，核心压缩后回弹</span></button>
+          <button class="state" data-state="loading"><b>加载 / Loading</b><span>轨道旋转，核心持续脉冲</span></button>
+          <button class="state" data-state="success"><b>成功 / Success</b><span>金色核心放大，绿色确认光环</span></button>
+          <button class="state" data-state="error"><b>失败 / Error</b><span>短促横向抖动，避免过度惊扰</span></button>
+        </div>
+        <div class="spec"><b>建议使用：</b>按钮点击反馈 550ms；请求等待超过 300ms 再进入 Loading；成功/失败状态停留 900–1200ms 后回到 Idle。所有状态均不改变 Logo 的主色和识别轮廓。</div>
+      </div>
+    </section>
+  </main>
+  <script>
+    const button = document.querySelector('#logoButton');
+    const statusText = document.querySelector('#statusText');
+    const labels = { idle:'待机中', hover:'悬停预览', click:'点击反馈', loading:'加载中', success:'已完成', error:'遇到问题' };
+    const stateButtons = [...document.querySelectorAll('[data-state]')];
+    let timer;
+    function setState(state) {
+      clearTimeout(timer);
+      button.className = 'logo-button ' + state;
+      statusText.textContent = labels[state];
+      stateButtons.forEach(item => item.classList.toggle('active', item.dataset.state === state));
+      if (state === 'click' || state === 'success' || state === 'error') timer = setTimeout(() => setState('idle'), state === 'click' ? 650 : 1100);
+    }
+    stateButtons.forEach(item => item.addEventListener('click', () => setState(item.dataset.state)));
+    button.addEventListener('click', () => setState('click'));
+    button.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setState('click'); } });
+  </script>
+</body>
+</html>

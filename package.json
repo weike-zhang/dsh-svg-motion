@@ -22,6 +22,7 @@
     "./package.json": "./package.json"
   },
   "files": [
+    "examples",
     "lib",
     "src",
     "assets",

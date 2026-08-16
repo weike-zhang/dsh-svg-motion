@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Logo Motion System</title>
+  <style>
+    :root { --ink:#261915; --muted:#907f75; --gold:#ffca6c; --gold-2:#e19213; --paper:#fbf8f3; --line:#eadfd3; --green:#53aa7b; --red:#d76b59; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; color:var(--ink); background:radial-gradient(circle at 50% -20%, #fff 0, var(--paper) 55%); font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; }
+    button { font:inherit; }
+    .page { width:min(1120px, calc(100% - 40px)); margin:0 auto; padding:36px 0 60px; }
+    .topbar { display:flex; align-items:center; justify-content:space-between; gap:20px; }
+    .brand { display:flex; align-items:center; gap:12px; font-weight:800; letter-spacing:.02em; }
+    .brand-mark { width:38px; height:33px; filter:drop-shadow(0 5px 8px #e4c89155); }
+    .eyebrow { margin:54px 0 8px; color:var(--gold-2); font-size:12px; font-weight:800; letter-spacing:.18em; text-transform:uppercase; }
+    h1 { max-width:720px; margin:0; font-size:clamp(36px, 6vw, 72px); line-height:.98; letter-spacing:-.055em; }
+    .intro { max-width:620px; margin:20px 0 0; color:var(--muted); font-size:16px; line-height:1.7; }
+    .board { display:grid; grid-template-columns:1.2fr .8fr; gap:18px; margin-top:38px; }
+    .card { border:1px solid var(--line); border-radius:28px; background:#fffdf9d9; box-shadow:0 18px 60px #4a27120c; overflow:hidden; }
+    .stage { position:relative; min-height:490px; display:grid; place-items:center; isolation:isolate; background:linear-gradient(145deg,#fffdf9,#f6eee5); }
+    .stage::before { content:""; position:absolute; width:340px; height:340px; border-radius:50%; background:#ffc85e24; filter:blur(8px); z-index:-1; }
+    .stage::after { content:""; position:absolute; left:18%; right:18%; bottom:70px; height:18px; border-radius:50%; background:#3b29251a; filter:blur(12px); z-index:-1; }
+    .stage-label { position:absolute; top:24px; left:26px; color:var(--muted); font-size:12px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; }
+    .stage-status { position:absolute; right:26px; top:22px; display:flex; align-items:center; gap:8px; color:var(--muted); font-size:12px; }
+    .status-dot { width:7px; height:7px; border-radius:50%; background:var(--gold-2); box-shadow:0 0 0 5px #ffca6c22; }
+    .logo-wrap { position:relative; width:min(310px, 58vw); aspect-ratio:96/82; cursor:pointer; transform-origin:center; }
+    .logo-wrap svg { display:block; width:100%; height:100%; overflow:visible; }
+    .logo-shadow { position:absolute; z-index:-1; inset:16% 4% -5%; border-radius:50%; background:#21151235; filter:blur(18px); transform:scaleY(.27); }
+    .wing-left,.wing-right,.diamond,.eye-left,.eye-right { transform-box:fill-box; transform-origin:center; }
+    .logo-wrap:hover .wing-left { animation:hoverLeft .55s cubic-bezier(.2,.85,.25,1); }
+    .logo-wrap:hover .wing-right { animation:hoverRight .55s cubic-bezier(.2,.85,.25,1); }
+    .logo-wrap:hover .diamond { animation:hoverDiamond .55s cubic-bezier(.2,.85,.25,1); }
+    @keyframes hoverLeft { 50% { transform:translateX(-7px) rotate(-3deg) scaleY(1.04); } }
+    @keyframes hoverRight { 50% { transform:translateX(7px) rotate(3deg) scaleY(1.04); } }
+    @keyframes hoverDiamond { 50% { transform:scale(1.1) rotate(5deg); } }
+    .logo-wrap.is-loading .wing-left { animation:loadLeft 1.1s infinite cubic-bezier(.35,.05,.35,1); }
+    .logo-wrap.is-loading .wing-right { animation:loadRight 1.1s infinite cubic-bezier(.35,.05,.35,1); }
+    .logo-wrap.is-loading .diamond { animation:loadDiamond 1.1s infinite cubic-bezier(.35,.05,.35,1); }
+    .logo-wrap.is-loading .eye-left,.logo-wrap.is-loading .eye-right { animation:look 1.1s infinite ease-in-out; }
+    @keyframes loadLeft { 50% { transform:translateX(-13px) rotate(-8deg) scaleY(.88); } }
+    @keyframes loadRight { 50% { transform:translateX(13px) rotate(8deg) scaleY(.88); } }
+    @keyframes loadDiamond { 50% { transform:rotate(180deg) scale(.75); } }
+    @keyframes look { 50% { transform:translateX(3px); } }
+    .logo-wrap.is-clicking { animation:click .5s cubic-bezier(.2,.8,.2,1); }
+    @keyframes click { 35% { transform:scale(.86) rotate(-2deg); } 65% { transform:scale(1.08) rotate(1deg); } }
+    .logo-wrap.is-success { animation:success .85s cubic-bezier(.16,1,.3,1); }
+    @keyframes success { 25% { transform:translateY(-14px) scale(1.08); } 58% { transform:translateY(3px) scale(.96); } 100% { transform:none; } }
+    .logo-wrap.is-error { animation:error .58s ease-in-out; }
+    @keyframes error { 20%,60% { transform:translateX(-10px); } 40%,80% { transform:translateX(10px); } }
+    .burst { position:absolute; width:20px; height:20px; border:2px solid var(--gold); border-radius:50%; opacity:0; pointer-events:none; }
+    .burst.go { animation:burst .65s ease-out; }
+    @keyframes burst { 0% { opacity:.8; transform:scale(.2); } 100% { opacity:0; transform:scale(8); } }
+    .control { padding:26px; }
+    .control h2 { margin:0 0 8px; font-size:20px; letter-spacing:-.03em; }
+    .control p { margin:0 0 20px; color:var(--muted); font-size:13px; line-height:1.6; }
+    .buttons { display:grid; gap:10px; }
+    .motion-btn { display:flex; align-items:center; justify-content:space-between; width:100%; padding:13px 15px; border:1px solid var(--line); border-radius:14px; color:var(--ink); background:#fff; cursor:pointer; transition:.2s ease; }
+    .motion-btn:hover { border-color:#d9af67; transform:translateY(-1px); box-shadow:0 8px 18px #7c4b1712; }
+    .motion-btn span:last-child { color:var(--muted); font-size:12px; }
+    .motion-btn[data-action="success"] span:first-child::before { content:"✓  "; color:var(--green); }
+    .motion-btn[data-action="error"] span:first-child::before { content:"×  "; color:var(--red); }
+    .legend { display:flex; gap:16px; flex-wrap:wrap; margin-top:22px; padding-top:18px; border-top:1px solid var(--line); color:var(--muted); font-size:11px; }
+    .legend i { display:inline-block; width:8px; height:8px; margin-right:6px; border-radius:50%; background:var(--gold-2); }
+    .specs { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:18px; }
+    .spec { padding:20px 22px; border:1px solid var(--line); border-radius:20px; background:#fffdf9; }
+    .spec strong { display:block; margin-bottom:5px; font-size:14px; }
+    .spec span { color:var(--muted); font-size:12px; line-height:1.5; }
+    @media (max-width:760px) { .page{width:min(100% - 28px,560px);padding-top:22px}.eyebrow{margin-top:40px}.board{grid-template-columns:1fr}.stage{min-height:370px}.specs{grid-template-columns:1fr} }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="topbar">
+      <div class="brand"><div class="brand-mark"><svg viewBox="0 0 96 82" aria-hidden="true"><use href="#logo"/></svg></div><span>Motion System</span></div>
+      <span style="color:var(--muted);font-size:12px">v1.0 / interaction kit</span>
+    </header>
+    <div class="eyebrow">A little character in every state</div>
+    <h1>让每一次等待，<br><em style="font-style:normal;color:var(--gold-2)">都有回应。</em></h1>
+    <p class="intro">一套围绕品牌 Logo 设计的网页交互动效：它会观察、回应、庆祝，也会在出错时陪你重试。</p>
+    <section class="board">
+      <div class="card stage" id="stage">
+        <span class="stage-label">Live preview</span><span class="stage-status"><i class="status-dot"></i><span id="statusText">待命中</span></span>
+        <div class="logo-wrap" id="logo" role="button" tabindex="0" aria-label="点击 Logo"><div class="logo-shadow"></div><span class="burst" id="burst"></span>
+          <svg viewBox="0 0 96 82" aria-hidden="true"><defs><linearGradient id="brownA" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#3B2925"/><stop offset="1" stop-color="#211512"/></linearGradient><linearGradient id="goldA" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FFCA6C"/><stop offset="1" stop-color="#E19213"/></linearGradient></defs><g clip-path="url(#clip)"><path class="wing-left" d="M27.3815 8.41235L38.598 19.6289L17.9794 40.9072L40.9073 64.0001V75.5465H29.8557L0 45.5258V35.7938L27.3815 8.41235Z" fill="url(#brownA)"/><path class="wing-right" d="M50.969 0H61.5257L96 34.6392V45.5258L61.5257 81.6496H54.5979V61.8558L75.3814 40.9073L50.969 16.165V0Z" fill="url(#brownA)"/><path class="diamond" d="M47.0104 19.4641L67.7939 40.9074L47.0104 62.3508L25.4021 40.9074L47.0104 19.4641Z" fill="url(#goldA)"/></g><ellipse class="eye-left" cx="32" cy="29.5" rx="11" ry="13.5" fill="white"/><ellipse class="eye-left" cx="35" cy="26.5" rx="4" ry="5.5" fill="black"/><ellipse class="eye-right" cx="65" cy="29.5" rx="11" ry="13.5" fill="white"/><ellipse class="eye-right" cx="69" cy="26.5" rx="4" ry="5.5" fill="black"/><clipPath id="clip"><rect width="96" height="82"/></clipPath></svg>
+        </div>
+      </div>
+      <aside class="card control"><h2>Try a state</h2><p>下面的状态都可以直接映射到网页组件：按钮、请求、Toast、空状态和重试。</p><div class="buttons"><button class="motion-btn" data-action="loading"><span>开始加载</span><span>01 / loader</span></button><button class="motion-btn" data-action="click"><span>点击反馈</span><span>02 / press</span></button><button class="motion-btn" data-action="success"><span>完成成功</span><span>03 / success</span></button><button class="motion-btn" data-action="error"><span>出错重试</span><span>04 / error</span></button><button class="motion-btn" data-action="reset"><span>恢复待命</span><span>05 / reset</span></button></div><div class="legend"><span><i></i>品牌核心色</span><span>鼠标悬停 Logo 试试</span></div></aside>
+    </section>
+    <section class="specs"><div class="spec"><strong>Loading</strong><span>双翼呼吸 + 中心菱形旋转，适合接口等待和页面初始化。</span></div><div class="spec"><strong>Feedback</strong><span>点击压缩、回弹与扩散波纹，适合按钮和卡片交互。</span></div><div class="spec"><strong>Result</strong><span>成功上弹、失败摇摆，配合状态文字形成完整反馈闭环。</span></div></section>
+  </main>
+  <svg width="0" height="0" style="position:absolute"><defs><symbol id="logo" viewBox="0 0 96 82"><path d="M27.3815 8.41235L38.598 19.6289L17.9794 40.9072L40.9073 64.0001V75.5465H29.8557L0 45.5258V35.7938L27.3815 8.41235Z" fill="#2c1c17"/><path d="M50.969 0H61.5257L96 34.6392V45.5258L61.5257 81.6496H54.5979V61.8558L75.3814 40.9073L50.969 16.165V0Z" fill="#2c1c17"/><path d="M47.0104 19.4641L67.7939 40.9074L47.0104 62.3508L25.4021 40.9074L47.0104 19.4641Z" fill="#e9a52f"/><ellipse cx="32" cy="29.5" rx="11" ry="13.5" fill="white"/><ellipse cx="35" cy="26.5" rx="4" ry="5.5"/><ellipse cx="65" cy="29.5" rx="11" ry="13.5" fill="white"/><ellipse cx="69" cy="26.5" rx="4" ry="5.5"/></symbol></defs></svg>
+  <script>
+    const logo = document.querySelector('.logo-wrap');
+    const burst = document.querySelector('#burst');
+    const statusText = document.querySelector('#statusText');
+    const labels = {loading:'加载中…',click:'已点击',success:'完成',error:'需要重试',reset:'待命中'};
+    let timer;
+    function play(action) {
+      clearTimeout(timer); logo.className = 'logo-wrap'; statusText.textContent = labels[action];
+      if (action === 'loading') logo.classList.add('is-loading');
+      if (action === 'click') { logo.classList.add('is-clicking'); burst.classList.remove('go'); void burst.offsetWidth; burst.classList.add('go'); }
+      if (action === 'success') logo.classList.add('is-success');
+      if (action === 'error') logo.classList.add('is-error');
+      if (action === 'reset') statusText.textContent = labels.reset;
+      if (action !== 'loading' && action !== 'reset') timer = setTimeout(() => { logo.className = 'logo-wrap'; }, 900);
+    }
+    document.querySelectorAll('[data-action]').forEach(btn => btn.addEventListener('click', () => play(btn.dataset.action)));
+    logo.addEventListener('click', () => play('click'));
+    logo.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); play('click'); } });
+  </script>
+</body>
+</html>

@@ -1,5 +1,5 @@
 # E2E overlay: mount dsh-svg-motion + the driver that exercises it once.
-# Loaded from the repo root (see README → Development).
+# Relative to the repo root — run the dsh command from this directory.
 - insert:
     - id: svg-motion
       name: ./lib/index.js

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="820" viewBox="0 0 96 82">
+  <defs>
+    <linearGradient id="wingL" x1="-1" y1="8" x2="43" y2="76" gradientUnits="userSpaceOnUse"><stop stop-color="#3B2925"/><stop offset="1" stop-color="#211512"/></linearGradient>
+    <linearGradient id="wingR" x1="51" y1="0" x2="98" y2="82" gradientUnits="userSpaceOnUse"><stop stop-color="#3B2925"/><stop offset="1" stop-color="#211512"/></linearGradient>
+    <linearGradient id="coreG" x1="25" y1="19" x2="68" y2="62" gradientUnits="userSpaceOnUse"><stop stop-color="#FFCA6C"/><stop offset="1" stop-color="#E19213"/></linearGradient>
+  </defs>
+  <g class="xz-wing-left"><path d="M27.3815 8.41235L38.598 19.6289L17.9794 40.9072L40.9073 64.0001V75.5465H29.8557L0 45.5258V35.7938L27.3815 8.41235Z" fill="url(#wingL)"/></g>
+  <g class="xz-wing-right"><path d="M50.969 0H61.5257L96 34.6392V45.5258L61.5257 81.6496H54.5979V61.8558L75.3814 40.9073L50.969 16.165V0Z" fill="url(#wingR)"/></g>
+  <g class="xz-core"><path d="M47.0104 19.4641L67.7939 40.9074L47.0104 62.3508L25.4021 40.9074L47.0104 19.4641Z" fill="url(#coreG)"/></g>
+</svg>
