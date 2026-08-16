@@ -1,8 +1,9 @@
 # E2E overlay: mount dsh-svg-motion + the driver that exercises it once.
+# Loaded from the repo root (see README → Development).
 - insert:
     - id: svg-motion
-      name: /private/var/folders/dv/mdzxj1l54g52tj323gxv4y380000gn/T/opencode/dsh-svg-motion/lib/index.js
+      name: ./lib/index.js
       inject: [tools]
     - id: svg-motion-e2e
-      name: /private/var/folders/dv/mdzxj1l54g52tj323gxv4y380000gn/T/opencode/dsh-svg-motion/lib/e2e-driver.js
+      name: ./lib/e2e-driver.js
       inject: [tools]
