@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>境间 · Logo 状态动效</title>
+<style>
+  :root {
+    --ink: #20282B;
+    --rust: #B6694F;
+    --rust-soft: #F1DED6;
+    --moss: #718077;
+    --moss-soft: #E5ECE8;
+    --warning: #A46F32;
+    --danger: #A84242;
+    --surface: #FCFBF8;
+    --canvas: #F3F1EC;
+    --secondary: #667074;
+    --border: #DCDDD8;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: var(--font);
+    background: var(--canvas);
+    color: var(--ink);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .hero {
+    background: var(--ink);
+    color: var(--surface);
+    padding: 56px 24px 48px;
+  }
+  .hero-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 28px;
+  }
+  .header-stage {
+    width: 104px;
+    height: 104px;
+    flex: none;
+  }
+  .hero h1 {
+    margin: 0 0 6px;
+    font-size: 34px;
+    font-weight: 600;
+    letter-spacing: .04em;
+  }
+  .hero-sub {
+    margin: 0;
+    color: rgba(252, 251, 248, .72);
+    font-size: 14px;
+    letter-spacing: .02em;
+  }
+  .hero-sub b { color: var(--rust); font-weight: 600; }
+
+  .intro {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 36px 24px 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    align-items: baseline;
+  }
+  .intro h2 { margin: 0; font-size: 20px; font-weight: 600; }
+  .intro p { margin: 0; font-size: 13px; color: var(--secondary); }
+
+  .grid {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 24px 64px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(236px, 1fr));
+    gap: 20px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 1px 2px rgba(32,40,43,.04);
+    transition: box-shadow .25s ease, transform .25s ease;
+  }
+  .card:hover { box-shadow: 0 14px 34px rgba(32,40,43,.09); transform: translateY(-2px); }
+
+  .stage {
+    height: 180px;
+    display: grid;
+    place-items: center;
+    padding: 18px;
+    position: relative;
+    background:
+      radial-gradient(120% 90% at 50% 18%, #FDFCFA 0%, var(--canvas) 130%);
+    border-bottom: 1px solid var(--border);
+    cursor: default;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .stage .mark { width: 128px; height: 128px; }
+
+  .mark {
+    display: block;
+    overflow: visible;
+    transform-origin: 50% 50%;
+  }
+  .mark .plane-path { fill: var(--ink); }
+  .mark.theme-reverse .plane-path { fill: var(--surface); }
+  .mark .point-rect, .mark .trail-rect { fill: var(--rust); }
+  .mark .opt-shape { fill: var(--rust-soft); }
+
+  .mark .point,
+  .mark .trail,
+  .mark .plane-left,
+  .mark .plane-right,
+  .mark .glow-shape,
+  .mark .portal-shape,
+  .mark .ring-shape,
+  .mark .opt-shape,
+  .mark .badge-shape {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .mark .plane-left { transform-origin: right center; }
+  .mark .plane-right { transform-origin: left center; }
+
+  .mark .glow-shape, .mark .portal-shape { opacity: 0; }
+  .mark .ring-shape { stroke: var(--moss); stroke-width: 7; stroke-linecap: round; opacity: 0; }
+  .mark .badge-shape { fill: var(--rust); stroke: var(--surface); stroke-width: 7; opacity: 0; }
+  .mark .opt-shape { opacity: 0; }
+
+  .info { padding: 14px 16px 12px; }
+  .name { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; }
+  .name .cn { font-size: 15px; font-weight: 600; letter-spacing: .02em; }
+  .name .en { font-size: 11px; font-weight: 500; color: var(--secondary); text-transform: uppercase; letter-spacing: .08em; }
+  .name .code { margin-left: auto; font-size: 10px; font-weight: 600; color: var(--rust); letter-spacing: .06em; }
+  .note { margin: 0 0 10px; font-size: 12.5px; color: var(--secondary); line-height: 1.55; }
+  .tags { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+  .tags li {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--moss-soft);
+    color: #4C6157;
+  }
+  .tags li.is-interactive { background: var(--rust-soft); color: #8A4C37; }
+  .tags li.is-static { background: var(--canvas); color: var(--secondary); }
+
+  .foot {
+    padding: 8px 16px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .hint { font-size: 11px; color: var(--secondary); margin-right: auto; }
+  .replay {
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ink);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 5px 12px;
+    cursor: pointer;
+    transition: border-color .2s, background .2s, color .2s;
+  }
+  .replay:hover { border-color: var(--rust); color: var(--rust); background: var(--rust-soft); }
+
+  /* ---------- IDLE 待机 ---------- */
+  @keyframes idle-breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.009); }
+  }
+  @keyframes idle-gate-l {
+    0%, 100% { transform: translateX(0); }
+    30% { transform: translateX(-1.5px); }
+    70% { transform: translateX(.8px); }
+  }
+  @keyframes idle-gate-r {
+    0%, 100% { transform: translateX(0); }
+    30% { transform: translateX(1.5px); }
+    70% { transform: translateX(-.8px); }
+  }
+  @keyframes idle-point {
+    0%, 100% { transform: scale(1); opacity: .95; }
+    50% { transform: scale(1.3); opacity: .68; }
+  }
+  .card[data-state="idle"] .mark { animation: idle-breathe 6.4s ease-in-out infinite; }
+  .card[data-state="idle"] .plane-left { animation: idle-gate-l 6.4s ease-in-out infinite; }
+  .card[data-state="idle"] .plane-right { animation: idle-gate-r 6.4s ease-in-out infinite; }
+  .card[data-state="idle"] .point { animation: idle-point 3.2s ease-in-out infinite .7s; }
+
+  /* ---------- HOVER 悬停 ---------- */
+  @keyframes hover-glow {
+    0%, 100% { opacity: .18; transform: scale(1); }
+    50% { opacity: .38; transform: scale(1.05); }
+  }
+  .card[data-state="hover"] .glow-shape { fill: url(#jj-glow-success); animation: hover-glow 3.6s ease-in-out infinite; }
+  .card[data-state="hover"] .mark { transition: transform .38s cubic-bezier(.22,1,.36,1), filter .38s ease; }
+  .card[data-state="hover"] .plane-left,
+  .card[data-state="hover"] .plane-right,
+  .card[data-state="hover"] .point { transition: transform .38s cubic-bezier(.22,1,.36,1), fill .3s ease; }
+  .card[data-state="hover"]:hover .mark { transform: translateY(-6px) scale(1.03); filter: drop-shadow(0 16px 20px rgba(32,40,43,.16)); }
+  .card[data-state="hover"]:hover .plane-left { transform: translateX(-2.6px); }
+  .card[data-state="hover"]:hover .plane-right { transform: translateX(2.6px); }
+  .card[data-state="hover"]:hover .point { transform: scale(1.45); fill: #CE8C74; }
+
+  /* ---------- PRESS 点击 ---------- */
+  @keyframes press-mark {
+    0% { transform: scale(1); }
+    16% { transform: scale(.945); }
+    30% { transform: scale(.9) translateY(2.4px); }
+    52% { transform: scale(1.045) translateY(-1px); }
+    76% { transform: scale(.99); }
+    100% { transform: scale(1); }
+  }
+  @keyframes press-plane-l {
+    0%, 100% { transform: translateX(0); }
+    55% { transform: translateX(-2px); }
+    82% { transform: translateX(.6px); }
+  }
+  @keyframes press-plane-r {
+    0%, 100% { transform: translateX(0); }
+    55% { transform: translateX(2px); }
+    82% { transform: translateX(-.6px); }
+  }
+  @keyframes press-point {
+    0%, 26% { transform: scale(1); fill: var(--rust); }
+    40% { transform: scale(1.7); fill: #D89B84; }
+    66% { transform: scale(1.08); fill: var(--rust); }
+    100% { transform: scale(1); fill: var(--rust); }
+  }
+  .card[data-state="press"].pressed .mark { animation: press-mark .62s cubic-bezier(.34,1.2,.5,1); }
+  .card[data-state="press"].pressed .plane-left { animation: press-plane-l .62s ease-out; }
+  .card[data-state="press"].pressed .plane-right { animation: press-plane-r .62s ease-out; }
+  .card[data-state="press"].pressed .point { animation: press-point .62s ease-out; }
+  .card[data-state="press"] .stage { cursor: pointer; }
+
+  /* ---------- LOADING 加载 ---------- */
+  @keyframes load-point {
+    0% { transform: translate(-96px, -4px) scale(.9); opacity: 0; }
+    10% { opacity: 1; }
+    38% { transform: translate(-12px, -2px) scale(.85); }
+    52% { transform: translate(0, 0) scale(.72); }
+    68% { transform: translate(18px, 2px) scale(.9); }
+    88% { transform: translate(96px, 4px) scale(1.05); opacity: 1; }
+    96% { transform: translate(96px, 4px) scale(1.05); opacity: 0; }
+    100% { transform: translate(-96px, -4px) scale(.9); opacity: 0; }
+  }
+  @keyframes load-gate {
+    0%, 100% { transform: scaleY(1); opacity: 1; }
+    50% { transform: scaleY(1.035); opacity: .88; }
+  }
+  .card[data-state="loading"] .point { animation: load-point 1.7s cubic-bezier(.45,.05,.55,.95) infinite; }
+  .card[data-state="loading"] .trail { opacity: 1; animation: load-point 1.7s cubic-bezier(.45,.05,.55,.95) infinite .16s; }
+  .card[data-state="loading"] .trail-rect { fill: var(--rust); opacity: .22; }
+  .card[data-state="loading"] .plane-left,
+  .card[data-state="loading"] .plane-right { animation: load-gate 1.7s ease-in-out infinite; }
+
+  /* ---------- BUSY 忙碌 ---------- */
+  @keyframes busy-mark {
+    0%, 100% { transform: scale(1); }
+    20% { transform: scale(1.02); }
+    40% { transform: scale(.985); }
+    60% { transform: scale(1.015); }
+    80% { transform: scale(.992); }
+  }
+  @keyframes busy-point {
+    0%, 100% { transform: translateY(0) scale(1); }
+    25% { transform: translateY(-7px) scale(1.14); }
+    55% { transform: translateY(5px) scale(.86); }
+    75% { transform: translateY(-1px) scale(1.04); }
+  }
+  @keyframes busy-plane-l {
+    0%, 100% { transform: translateX(0); }
+    40% { transform: translateX(-1.6px); }
+    70% { transform: translateX(.6px); }
+  }
+  @keyframes busy-plane-r {
+    0%, 100% { transform: translateX(0); }
+    40% { transform: translateX(1.6px); }
+    70% { transform: translateX(-.6px); }
+  }
+  .card[data-state="busy"] .mark { animation: busy-mark 1.05s cubic-bezier(.5,.05,.5,.95) infinite; }
+  .card[data-state="busy"] .point { animation: busy-point 1.05s cubic-bezier(.5,.05,.5,.95) infinite; }
+  .card[data-state="busy"] .plane-left { animation: busy-plane-l 1.05s ease-in-out infinite; }
+  .card[data-state="busy"] .plane-right { animation: busy-plane-r 1.05s ease-in-out infinite; }
+  .card[data-state="busy"] .point-rect { fill: var(--warning); }
+
+  /* ---------- SUCCESS 成功 ---------- */
+  @keyframes suc-mark {
+    0%, 14% { transform: scale(1); }
+    22% { transform: scale(.955); }
+    46% { transform: scale(1.03); }
+    62% { transform: scale(.995); }
+    100% { transform: scale(1); }
+  }
+  @keyframes suc-door-l {
+    0%, 20% { transform: rotate(0); }
+    46% { transform: rotate(-14deg) translateX(-3px); }
+    100% { transform: rotate(-14deg) translateX(-3px); }
+  }
+  @keyframes suc-door-r {
+    0%, 20% { transform: rotate(0); }
+    46% { transform: rotate(14deg) translateX(3px); }
+    100% { transform: rotate(14deg) translateX(3px); }
+  }
+  @keyframes suc-point {
+    0%, 14% { transform: translate(0,0) scale(1); fill: var(--rust); opacity: 1; }
+    30% { transform: translate(0,30px) scale(.85); fill: var(--rust); opacity: 1; }
+    44% { transform: translate(0,0) scale(1.7); fill: var(--moss); }
+    58% { transform: translate(0,0) scale(1.12); fill: var(--moss); }
+    100% { transform: translate(0,0) scale(1.05); fill: var(--moss); }
+  }
+  @keyframes suc-glow {
+    0%, 26% { opacity: 0; transform: scale(.35); }
+    48% { opacity: 1; transform: scale(1); }
+    70% { opacity: .85; transform: scale(1.06); }
+    100% { opacity: .4; transform: scale(1.1); }
+  }
+  @keyframes suc-ring {
+    0%, 58% { opacity: 0; transform: scale(.45); }
+    66% { opacity: .95; transform: scale(.6); }
+    80% { opacity: 0; transform: scale(2); }
+    100% { opacity: 0; }
+  }
+  .card[data-state="success"] .mark { animation: suc-mark 3.2s ease-out infinite; }
+  .card[data-state="success"] .plane-left { animation: suc-door-l 3.2s cubic-bezier(.34,1.2,.4,1) infinite; }
+  .card[data-state="success"] .plane-right { animation: suc-door-r 3.2s cubic-bezier(.34,1.2,.4,1) infinite; }
+  .card[data-state="success"] .point { animation: suc-point 3.2s ease-out infinite; }
+  .card[data-state="success"] .glow-shape { fill: url(#jj-glow-success); animation: suc-glow 3.2s ease-out infinite; }
+  .card[data-state="success"] .ring-shape { stroke: var(--moss); animation: suc-ring 3.2s ease-out infinite; }
+  .card[data-state="success"] .mark,
+  .card[data-state="success"] .plane-left,
+  .card[data-state="success"] .plane-right,
+  .card[data-state="success"] .point,
+  .card[data-state="success"] .glow-shape,
+  .card[data-state="success"] .ring-shape { animation-delay: -1.3s; }
+
+  /* ---------- FAILURE 失败 ---------- */
+  @keyframes fail-mark {
+    0%, 8% { transform: translateX(0); }
+    12% { transform: translateX(-8px); }
+    18% { transform: translateX(7px); }
+    24% { transform: translateX(-6px); }
+    30% { transform: translateX(5px); }
+    36% { transform: translateX(-4px); }
+    42% { transform: translateX(3px); }
+    48% { transform: translateX(-2px); }
+    54% { transform: translateX(1px); }
+    60%, 100% { transform: translateX(0); }
+  }
+  @keyframes fail-door-l {
+    0%, 16% { transform: rotate(0); }
+    40% { transform: rotate(7deg) translateX(2px); }
+    100% { transform: rotate(7deg) translateX(2px); }
+  }
+  @keyframes fail-door-r {
+    0%, 16% { transform: rotate(0); }
+    40% { transform: rotate(-7deg) translateX(-2px); }
+    100% { transform: rotate(-7deg) translateX(-2px); }
+  }
+  @keyframes fail-point {
+    0%, 8% { transform: translate(0,0) scale(1); fill: var(--rust); opacity: 0; }
+    16% { opacity: 1; }
+    26% { transform: translate(0,-3px) scale(.9); fill: var(--danger); }
+    36% { transform: translate(-30px,-6px) scale(1.18); fill: var(--danger); }
+    48% { transform: translate(-30px,-6px) scale(1.25); fill: var(--danger); opacity: 1; }
+    58% { transform: translate(-22px,0) scale(.95); fill: var(--danger); opacity: .9; }
+    72% { transform: translate(-16px,0) scale(1); fill: var(--danger); opacity: 1; }
+    90% { opacity: .15; }
+    100% { transform: translate(-16px,0) scale(1); fill: var(--danger); opacity: 0; }
+  }
+  @keyframes fail-glow {
+    0%, 34% { opacity: 0; transform: scale(.3); }
+    50% { opacity: .9; transform: scale(1.15); }
+    66% { opacity: .5; transform: scale(1.25); }
+    100% { opacity: 0; transform: scale(1.3); }
+  }
+  @keyframes fail-ring {
+    0%, 30% { opacity: 0; transform: scale(.4); }
+    36% { opacity: .95; transform: scale(.55); }
+    52% { opacity: 0; transform: scale(1.6); }
+    100% { opacity: 0; }
+  }
+  .card[data-state="failure"] .mark { animation: fail-mark 3.4s ease-out infinite; }
+  .card[data-state="failure"] .plane-left { animation: fail-door-l 3.4s cubic-bezier(.34,1.1,.4,1) infinite; }
+  .card[data-state="failure"] .plane-right { animation: fail-door-r 3.4s cubic-bezier(.34,1.1,.4,1) infinite; }
+  .card[data-state="failure"] .point { animation: fail-point 3.4s ease-in-out infinite; }
+  .card[data-state="failure"] .glow-shape { fill: url(#jj-glow-danger); animation: fail-glow 3.4s ease-in-out infinite; }
+  .card[data-state="failure"] .ring-shape { stroke: var(--danger); stroke-width: 6; animation: fail-ring 3.4s ease-out infinite; }
+  .card[data-state="failure"] .mark,
+  .card[data-state="failure"] .plane-left,
+  .card[data-state="failure"] .plane-right,
+  .card[data-state="failure"] .point,
+  .card[data-state="failure"] .glow-shape,
+  .card[data-state="failure"] .ring-shape { animation-delay: -2.2s; }
+
+  /* ---------- FOCUS 聚焦 ---------- */
+  .card[data-state="focus"] .stage {
+    cursor: pointer;
+    transition: box-shadow .25s ease;
+  }
+  .card[data-state="focus"] .mark { transition: transform .3s cubic-bezier(.22,1,.36,1); }
+  .card[data-state="focus"].focused .stage {
+    box-shadow: inset 0 0 0 2px rgba(182,105,79,.45), 0 0 0 6px rgba(182,105,79,.16);
+  }
+  .card[data-state="focus"].focused .mark { transform: scale(1.03); }
+
+  /* ---------- DISABLED 禁用 ---------- */
+  .card[data-state="disabled"] .mark { opacity: .4; filter: saturate(.15); }
+  .card[data-state="disabled"] .point-rect { fill: #A6ABA7; }
+
+  /* ---------- NOTIFICATION 通知 ---------- */
+  @keyframes notif-badge {
+    0%, 16% { opacity: 0; transform: scale(.3); }
+    26% { opacity: 1; transform: scale(1.3); }
+    34% { opacity: 1; transform: scale(.92); }
+    42% { opacity: 1; transform: scale(1.1); }
+    50% { opacity: 1; transform: scale(1); }
+    58% { opacity: 1; transform: scale(1.2); }
+    66% { opacity: 1; transform: scale(1); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  @keyframes notif-point {
+    0%, 42% { transform: scale(1); }
+    50% { transform: scale(1.35); }
+    60% { transform: scale(1); }
+    100% { transform: scale(1); }
+  }
+  @keyframes notif-gate-l {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(-1.2px); }
+  }
+  @keyframes notif-gate-r {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(1.2px); }
+  }
+  .card[data-state="notification"] .badge-shape { animation: notif-badge 4.4s cubic-bezier(.34,1.4,.4,1) infinite; }
+  .card[data-state="notification"] .point { animation: notif-point 4.4s ease-out infinite; }
+  .card[data-state="notification"] .plane-left { animation: notif-gate-l 4.4s ease-in-out infinite; }
+  .card[data-state="notification"] .plane-right { animation: notif-gate-r 4.4s ease-in-out infinite; }
+  .card[data-state="notification"] .badge-shape,
+  .card[data-state="notification"] .point,
+  .card[data-state="notification"] .plane-left,
+  .card[data-state="notification"] .plane-right { animation-delay: -3.0s; }
+
+  /* ---------- DECISION 抉择 ---------- */
+  @keyframes dec-opt-l {
+    0%, 24% { opacity: 0; transform: scale(.4); }
+    32% { opacity: 1; transform: scale(1.15); }
+    40% { opacity: 1; transform: scale(1); }
+    58% { opacity: 1; }
+    72%, 100% { opacity: 0; transform: scale(.6); }
+  }
+  @keyframes dec-opt-r {
+    0%, 48% { opacity: 0; transform: scale(.4); }
+    56% { opacity: 1; transform: scale(1.15); }
+    64% { opacity: 1; transform: scale(1); }
+    100% { opacity: .55; transform: scale(1); }
+  }
+  @keyframes dec-point {
+    0%, 16% { transform: translate(0,0) scale(1); fill: var(--rust); }
+    26% { transform: translate(-33px,0) scale(1.25); fill: var(--rust); }
+    40% { transform: translate(-33px,0) scale(1.12); }
+    52% { transform: translate(0,0) scale(1); }
+    60% { transform: translate(33px,0) scale(1.25); fill: var(--moss); }
+    78% { transform: translate(33px,0) scale(1.3); fill: var(--moss); }
+    100% { transform: translate(0,0) scale(1); fill: var(--rust); }
+  }
+  .card[data-state="decision"] .opt-shape { animation: dec-opt-l 4.6s ease-in-out infinite; }
+  .card[data-state="decision"] .opt-r .opt-shape { animation-name: dec-opt-r; }
+  .card[data-state="decision"] .point { animation: dec-point 4.6s ease-in-out infinite; }
+  .card[data-state="decision"] .opt-shape,
+  .card[data-state="decision"] .opt-r .opt-shape,
+  .card[data-state="decision"] .point { animation-delay: -.9s; }
+
+  /* ---------- PORTAL 穿越 ---------- */
+  @keyframes portal-mark {
+    0%, 12% { transform: scale(1); opacity: 1; }
+    46% { transform: scale(1.32); opacity: 1; }
+    58% { transform: scale(1.38); opacity: 0; }
+    100% { transform: scale(1.38); opacity: 0; }
+  }
+  @keyframes portal-door-l {
+    0%, 14% { transform: rotate(0); }
+    46% { transform: rotate(-24deg) translateX(-4px); }
+    100% { transform: rotate(-24deg) translateX(-4px); }
+  }
+  @keyframes portal-door-r {
+    0%, 14% { transform: rotate(0); }
+    46% { transform: rotate(24deg) translateX(4px); }
+    100% { transform: rotate(24deg) translateX(4px); }
+  }
+  @keyframes portal-point {
+    0%, 10% { transform: translate(0,0) scale(1); opacity: 1; }
+    34% { transform: translate(0,-2px) scale(2.2); opacity: 1; }
+    46% { transform: translate(0,0) scale(2.6); opacity: .9; }
+    56% { transform: translate(0,0) scale(3.1); opacity: 0; }
+    100% { transform: translate(0,0) scale(1); opacity: 0; }
+  }
+  @keyframes portal-glow {
+    0%, 26% { opacity: 0; transform: scale(.3); }
+    46% { opacity: 1; transform: scale(1.4); }
+    58% { opacity: 0; transform: scale(1.7); }
+    100% { opacity: 0; transform: scale(1.7); }
+  }
+  .card[data-state="portal"] .mark { animation: portal-mark 4s cubic-bezier(.22,1,.36,1) infinite; }
+  .card[data-state="portal"] .plane-left { animation: portal-door-l 4s cubic-bezier(.34,1.2,.4,1) infinite; }
+  .card[data-state="portal"] .plane-right { animation: portal-door-r 4s cubic-bezier(.34,1.2,.4,1) infinite; }
+  .card[data-state="portal"] .point { animation: portal-point 4s ease-out infinite; }
+  .card[data-state="portal"] .portal-shape { animation: portal-glow 4s ease-out infinite; }
+  .card[data-state="portal"] .mark,
+  .card[data-state="portal"] .plane-left,
+  .card[data-state="portal"] .plane-right,
+  .card[data-state="portal"] .point,
+  .card[data-state="portal"] .portal-shape { animation-delay: -2.5s; }
+
+  footer {
+    text-align: center;
+    padding: 28px 24px 48px;
+    color: var(--secondary);
+    font-size: 12px;
+  }
+  footer code {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1px 6px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: .01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: .01ms !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="header-stage"></div>
+    <div>
+      <h1>境间 · Logo 状态动效</h1>
+      <p class="hero-sub">动效语言：<b>停留</b> — <b>选择</b> — <b>穿过界门</b>。境点不做宠物化动作，克制、有氛围、只表达状态。</p>
+    </div>
+  </div>
+</header>
+
+<section class="intro">
+  <h2>12 个状态</h2>
+  <p>循环类自动播放；悬停 / 点击 / 聚焦可交互；每张卡片右上角可重播。</p>
+</section>
+
+<section class="grid">
+
+  <article class="card" data-state="idle">
+    <div class="stage"></div>
+    <div class="info">
+      <div class="name"><span class="cn">待机</span><span class="en">Idle</span><span class="code">1</span></div>
+      <p class="note">停留：界门缓慢呼吸，境点随之明灭，等待一次选择。</p>
+      <ul class="tags"><li>节奏</li><li>克制</li></ul>
+    </div>
+    <div class="foot"><span class="hint">循环演示</span><button class="replay" type="button">重播</button></div>
+  </article>
+
+  <article class="card" data-state="hover">
+    <div class="stage"></div>
+    <div class="info">
+      <div class="name"><span class="cn">悬停</span><span class="en">Hover</span><span class="code">2</span></div>
+      <p class="note">界门微启、整体浮起，境点放亮——引起注意，但不催促。</p>
+      <ul class="tags"><li class="is-interactive">交互</li><li>慢入慢出</li></ul>
+    </div>
+    <div class="foot"><span class="hint">悬停试试</span><button class="replay" type="button">重播</button></div>
+  </article>
+
+  <article class="card" data-state="press">
+    <div class="stage"></div>
+    <div class="info">
+      <div class="name"><span class="cn">点击</span><span class="en">Press</span><span class="code">3</span></div>
+      <p class="note">预备—压实—弹起—落定；两扇界门跟随回弹，有重量。</p>
+      <ul class="tags"><li class="is-interactive">交互</li><li>预告</li><li>压扁拉伸</li><li>跟随</li></ul>
+    </div>
+    <div class="foot"><span class="hint">按下试试</span><button class="replay" type="button">重播</button></div>
+  </article>
+
+  <article class="card" data-state="loading">
+    <div class="stage"></div>
+    <div class="info">
+      <div class="name"><span class="cn">加载</span><span class="en">Loading</span><span class="code">4</span></div>
+      <p class="note">流转：境点从左世界穿过界门抵达右世界，留下淡色拖尾。</p>
+      <ul class="tags"><li>弧线</li><li>二次动作</li></ul>
+    </div>
+    <div class="foot"><span class="hint">循环演示</span><button class="replay" type="button">重播</button></div>
+  </article>
+
+  <article class="card" data-state="busy">
+    <div class="stage"></div>
+    <div class="info">
+      <div class="name"><span class="cn">忙碌</span><span class="en">Busy</span><span class="code">5</span></div>
+      <p class="note">劳作：急促而不失序的呼吸，境点上下起伏，界门紧绷。</p>
+      <ul class="tags"><li>节奏</li><li>夸张克制</li></ul>
+    </div>
+    <div class="foot"><span class="hint">循环演示</span><button class="replay" type="button">重播</button></div>
+  </article>
+
+  <article class="card" data-state="success">
+    <div class="stage"></div>
+    <div class="info">
+      <div class="name"><span class="cn">成功</span><span class="en">Success</span><span class="code">6</span></div>
+      <p class="note">达成：界门敞开、苔绿光芒涌出，境点穿过界门化作苔绿落定，一道光环缓缓荡开。</p>
+      <ul class="tags"><li>预告</li><li>二次动作</li><li>慢出</li></ul>
+    </div>
+    <div class="foot"><span class="hint">自动演示</span><button class="replay" type="button">重播</button></div>
+  </article>
+
+  <article class="card" data-state="failure">
+    <div class="stage"></div>
+    <div class="info">
+      <div class="name"><span class="cn">失败</span><span class="en">Failure</span><span class="code">7</span></div>
+      <p class="note">受阻：界门猛地合拢，境点被拒退回左世界，红光震荡一闪。</p>
+      <ul class="tags"><li>冲击</li><li>预告</li><li>夸张</li></ul>
+    </div>
+    <div class="foot"><span class="hint">自动演示</span><button class="replay" type="button">重播</button></div>
+  </article>
+
+  <article class="card" data-state="focus">
+    <div class="stage" tabindex="0" role="button" aria-label="聚焦演示"></div>
+    <div class="info">
+      <div class="name"><span class="cn">聚焦</span><span class="en">Focus</span><span class="code">8</span></div>
+      <p class="note">就绪：陶土色焦点环亮起，境点微微放大，等待确认。</p>
+      <ul class="tags"><li class="is-interactive">交互</li><li>慢入慢出</li></ul>
+    </div>
+    <div class="foot"><span class="hint">点击 / 回车</span><button class="replay" type="button">重播</button></div>
+  </article>
+
+  <article class="card" data-state="disabled">
+    <div class="stage"></div>
+    <div class="info">
+      <div class="name"><span class="cn">禁用</span><span class="en">Disabled</span><span class="code">9</span></div>
+      <p class="note">停用：整体降灰降透明，无任何动效，境点失去陶土色。</p>
+      <ul class="tags"><li class="is-static">无动效</li></ul>
+    </div>
+    <div class="foot"><span class="hint">静态</span><button class="replay" type="button">重播</button></div>
+  </article>
+
+  <article class="card" data-state="notification">
+    <div class="stage"></div>
+    <div class="info">
+      <div class="name"><span class="cn">通知</span><span class="en">Notification</span><span class="code">10</span></div>
+      <p class="note">待处理：右上角弹出陶土红点并轻跳两次，境点随之闪烁。</p>
+      <ul class="tags"><li>弹性</li><li>二次动作</li></ul>
+    </div>
+    <div class="foot"><span class="hint">自动演示</span><button class="replay" type="button">重播</button></div>
+  </article>
+
+  <article class="card" data-state="decision">
+    <div class="stage"></div>
+    <div class="info">
+      <div class="name"><span class="cn">抉择</span><span class="en">Decision</span><span class="code">11</span></div>
+      <p class="note">选择：在左右两个世界的选项间权衡、停顿，最终落下决定。</p>
+      <ul class="tags"><li>弧线</li><li>停顿</li><li>决定点</li></ul>
+    </div>
+    <div class="foot"><span class="hint">自动演示</span><button class="replay" type="button">重播</button></div>
+  </article>
+
+  <article class="card" data-state="portal">
+    <div class="stage"></div>
+    <div class="info">
+      <div class="name"><span class="cn">穿越</span><span class="en">Portal</span><span class="code">12</span></div>
+      <p class="note">穿过界门：镜头推近、两翼大敞，境点放大没入白光。</p>
+      <ul class="tags"><li>推镜</li><li>预告</li><li>极简夸张</li></ul>
+    </div>
+    <div class="foot"><span class="hint">自动演示</span><button class="replay" type="button">重播</button></div>
+  </article>
+
+</section>
+
+<footer>
+  基于 <code>docs/brand-system-v0.6.md</code> 动效语言「停留—选择—穿过界门」与 <code>design-system/tokens</code> 品牌 Token 制作。
+  支持 <code>prefers-reduced-motion</code>。
+</footer>
+
+<script>
+  var MARK = '<svg class="mark" viewBox="0 0 256 256" aria-hidden="true" focusable="false">'
+    + '<defs>'
+    + '<radialGradient id="jj-glow-success" cx="50%" cy="50%" r="50%">'
+    + '<stop offset="0%" stop-color="#B9D0C0"/>'
+    + '<stop offset="100%" stop-color="#E5ECE8" stop-opacity="0"/>'
+    + '</radialGradient>'
+    + '<radialGradient id="jj-glow-danger" cx="50%" cy="50%" r="50%">'
+    + '<stop offset="0%" stop-color="#E8B3AC"/>'
+    + '<stop offset="100%" stop-color="#F4E1DF" stop-opacity="0"/>'
+    + '</radialGradient>'
+    + '<radialGradient id="jj-glow-portal" cx="50%" cy="50%" r="50%">'
+    + '<stop offset="0%" stop-color="#FFFFFF"/>'
+    + '<stop offset="55%" stop-color="#F1DED6"/>'
+    + '<stop offset="100%" stop-color="#F1DED6" stop-opacity="0"/>'
+    + '</radialGradient>'
+    + '</defs>'
+    + '<g class="glow"><ellipse class="glow-shape" cx="129" cy="129" rx="34" ry="44" fill="url(#jj-glow-success)"/></g>'
+    + '<g class="portal-glow"><ellipse class="portal-shape" cx="129" cy="129" rx="40" ry="52" fill="url(#jj-glow-portal)"/></g>'
+    + '<g class="ring"><circle class="ring-shape" cx="129" cy="129" r="34" fill="none"/></g>'
+    + '<g class="opt opt-l"><circle class="opt-shape" cx="96" cy="129" r="9"/></g>'
+    + '<g class="opt opt-r"><circle class="opt-shape" cx="162" cy="129" r="9"/></g>'
+    + '<g class="badge"><circle class="badge-shape" cx="198" cy="46" r="17"/></g>'
+    + '<g class="plane plane-left"><path class="plane-path" d="M36 40 112 82v92l-76 42V40Z"/></g>'
+    + '<g class="plane plane-right"><path class="plane-path" d="M220 58 144 100v56l76 42V58Z"/></g>'
+    + '<g class="trail"><rect class="trail-rect" x="124" y="124" width="10" height="10" rx="2"/></g>'
+    + '<g class="point"><rect class="point-rect" x="124" y="124" width="10" height="10" rx="2"/></g>'
+    + '</svg>';
+
+  document.querySelectorAll('.stage').forEach(function (s) { s.innerHTML = MARK; });
+  document.querySelectorAll('.header-stage').forEach(function (s) {
+    s.innerHTML = MARK;
+    s.querySelector('.mark').classList.add('theme-reverse');
+  });
+
+  function restart(card) {
+    var els = card.querySelectorAll('.mark, .plane-left, .plane-right, .point, .trail, .glow-shape, .portal-shape, .ring-shape, .opt-shape, .badge-shape');
+    els.forEach(function (el) { el.style.animation = 'none'; el.style.animationDelay = '0s'; });
+    void card.offsetWidth;
+    els.forEach(function (el) { el.style.animation = ''; });
+  }
+
+  var pressCard = document.querySelector('.card[data-state="press"]');
+  var pressStage = pressCard.querySelector('.stage');
+  var pressTimer = null;
+  function triggerPress() {
+    clearTimeout(pressTimer);
+    pressCard.classList.remove('pressed');
+    void pressStage.offsetWidth;
+    pressCard.classList.add('pressed');
+    pressTimer = setTimeout(function () { pressCard.classList.remove('pressed'); }, 640);
+  }
+  pressStage.addEventListener('pointerdown', triggerPress);
+
+  var focusCard = document.querySelector('.card[data-state="focus"]');
+  var focusStage = focusCard.querySelector('.stage');
+  function toggleFocus() { focusCard.classList.toggle('focused'); }
+  focusStage.addEventListener('click', toggleFocus);
+  focusStage.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleFocus(); }
+  });
+
+  document.querySelectorAll('.replay').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var card = btn.closest('.card');
+      var state = card.getAttribute('data-state');
+      if (state === 'press') { triggerPress(); }
+      else if (state === 'focus') { toggleFocus(); }
+      else { restart(card); }
+    });
+  });
+</script>
+</body>
+</html>

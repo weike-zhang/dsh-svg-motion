@@ -25,9 +25,21 @@
 
 ## 真实案例
 
-[`examples/xunzhi-logo-motion-demo.html`](examples/xunzhi-logo-motion-demo.html) 是循智共创 logo 的完整交互动效包:待机、悬停、点击、加载、成功、失败六种状态,浏览器打开就能点。它和上面的 hero 动效用的是同一个品牌 logo。
+两个真实品牌的 logo 都用这个工具做成了动效:
 
-循智共创 logo 为「循智共创」项目自有品牌标识,仅用作本插件的演示素材。
+### 循智共创
+
+![循智共创 logo 动效](docs/hero.gif)
+
+棕褐双翼从两侧张开、金色核心点亮,3 秒组装完成。配套的交互动效包见 [`examples/xunzhi-logo-motion-demo.html`](examples/xunzhi-logo-motion-demo.html):待机、悬停、点击、加载、成功、失败六种状态,浏览器打开就能点。
+
+### 境间
+
+![境间 logo 动效](docs/jingjian-hero.gif)
+
+深灰的「界门」两面平面向外敞开、中央陶土色境点停留点亮。配套的状态动效包见 [`examples/jingjian-logo-states.html`](examples/jingjian-logo-states.html):待机、悬停、点击、加载、忙碌、成功、失败、聚焦、禁用、通知、抉择、穿越,共 12 个状态。
+
+两个品牌 logo 均为各自项目自有标识,仅用作本插件的演示素材。
 
 ## 快速开始
 
