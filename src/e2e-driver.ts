@@ -1,6 +1,6 @@
 /**
  * E2E verification plugin: drive one `animate_svg` call through the real
- * harness tool pipeline (no LLM) using the 循智共创 logo in `logo` intent.
+ * harness tool pipeline (no LLM) using the 境间 logo in `logo` intent.
  */
 import type { Context } from '@deepseek-ai/cordis'
 import { readFile } from 'node:fs/promises'
@@ -9,7 +9,7 @@ import { CallId } from '@deepseek-ai/dsh-llm'
 export const name = 'svg-motion-e2e'
 export const inject = ['tools'] as const
 
-const SAMPLE = new URL('../test/xunzhi-logo-clean.svg', import.meta.url)
+const SAMPLE = new URL('../test/jingjian-mark.svg', import.meta.url)
 
 export function apply(ctx: Context): void {
   void (async () => {

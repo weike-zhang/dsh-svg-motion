@@ -4,9 +4,9 @@
 
 给工具一个 SVG(直接贴代码,或给文件路径),它会在浏览器里逐帧渲染成透明背景动画,再用 ffmpeg 合成 MP4。不需要设计软件,也不用会视频剪辑。
 
-![循智共创 logo 动效(带眼睛版)](docs/hero.gif)
+![境间 logo 状态动效](docs/jingjian-states.gif)
 
-上面是循智共创的双翼 logo 做成的动效:双翼张开、金色核心点亮,眼睛最后睁开看向前方。产物是透明背景 30fps 序列帧 + MP4,可直接放进网页、演示或剪辑。
+上面是用境间 logo 生成的 6 个状态动效:待机、悬停、加载、成功、失败、穿越,每个状态一种动效语言。产物是透明背景 30fps 序列帧 + MP4,可直接放进网页、演示或剪辑。
 
 ## 它能做出什么
 
@@ -25,27 +25,9 @@
 
 ## 动效展示
 
-同一个工具,给不同 logo、不同语言,能做出差异明显的动效。
+境间 logo 的完整状态动效包见 [`examples/jingjian-logo-states.html`](examples/jingjian-logo-states.html),浏览器打开就能点:待机、悬停、点击、加载、忙碌、成功、失败、聚焦、禁用、通知、抉择、穿越,共 12 个状态。
 
-### 循智共创 · Logo 语言
-
-![循智共创 logo 动效(带眼睛版)](docs/hero.gif)
-
-双翼从中间张开、金色核心点亮,眼睛最后睁开。整个 logo 作为一个整体落位,适合作为品牌亮相镜头。配套交互动效包见 [`examples/logo-motion-system.html`](examples/logo-motion-system.html)。
-
-### 循智共创 · 组装语言
-
-![循智共创 logo 组装动效](docs/xunzhi-assembly.gif)
-
-同一只鸟,换成组装语言:双翼、菱形、眼睛分别从四周飞入,带过冲回弹,逐个拼成完整的 logo。适合强调「零件组合」的场景,比如版本升级、功能合成。
-
-### 境间 · Logo 语言
-
-![境间 logo 动效](docs/jingjian-hero.gif)
-
-境间的深灰「界门」两面平面向外敞开,中央陶土色境点停留点亮,整体克制、有氛围。配套的 12 状态动效包见 [`examples/jingjian-logo-states.html`](examples/jingjian-logo-states.html):待机、悬停、点击、加载、忙碌、成功、失败、聚焦、禁用、通知、抉择、穿越。
-
-三个案例的 logo 均为各自项目自有标识,仅用作本插件的演示素材。
+境间 logo 为「境间」项目自有品牌标识,仅用作本插件的演示素材。
 
 ## 快速开始
 
@@ -101,7 +83,7 @@ npm install @deepseek-ai/dsh@0.1.0-rc.6
 ./node_modules/.bin/dsh --profile headless --patch ./e2e.patch.yml "ignored"
 ```
 
-驱动会用 `intent: logo` 渲染循智共创 logo,打印产物路径;改 `src/e2e-driver.ts` 里的 `arguments.intent` 可以切换成组装风格。
+驱动会用 `intent: logo` 渲染境间 logo,打印产物路径;改 `src/e2e-driver.ts` 里的 `arguments.intent` 可以切换成组装风格。
 
 ## 许可
 
