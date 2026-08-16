@@ -1,0 +1,5 @@
+# dsh-svg-motion bundle patch: register the plugin in a profile.
+- insert:
+    - id: svg-motion
+      name: dsh-svg-motion
+      inject: [tools]

@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  html, body { margin: 0; padding: 0; overflow: hidden; background: transparent; }
+  .stage {
+    width: 100vw; height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    background: transparent;
+  }
+  svg { width: 100%; height: 100%; overflow: visible; }
+</style>
+</head>
+<body>
+<div class="stage" id="stage"></div>
+<script>
+  // SVG assembly animation renderer.
+  // The host drives `window.__renderFrame(progress)` per exported frame; each
+  // call computes the assembly state at that progress and applies it to the
+  // SVG via transform attributes. This keeps the output deterministic and
+  // does not depend on a timeline clock or external animation libraries.
+  window.__initSvg = function (svgMarkup, opts) {
+    const stage = document.getElementById('stage');
+    const holder = document.createElement('div');
+    holder.innerHTML = svgMarkup.trim();
+    const svg = holder.querySelector('svg');
+    if (!svg) { throw new Error('no <svg> element in input'); }
+    stage.appendChild(svg);
+
+    const paths = Array.from(svg.querySelectorAll('path'));
+    const groups = Array.from(svg.querySelectorAll('g'));
+    const all = paths.concat(groups);
+    const hull = paths[0] || all[0] || null;
+    const parts = (paths.slice(1).length ? paths.slice(1) : all.slice(1)).filter(Boolean);
+
+    // The stage may have no intrinsic size; force 1080x1080 viewport for the
+    // square tile default unless the SVG declares a viewBox we should respect.
+    const viewBox = svg.getAttribute('viewBox');
+    const vb = viewBox ? viewBox.trim().split(/[\s,]+/).map(Number) : null;
+    if (vb && vb.length === 4) {
+      svg.setAttribute('viewBox', vb.join(' '));
+    } else {
+      svg.setAttribute('viewBox', '0 0 1080 1080');
+    }
+
+    const DUR = opts && opts.duration ? opts.duration : 3.0;      // seconds
+    const FPS = 30;
+    const partsDelay = opts && opts.partsDelay != null ? opts.partsDelay : 0.2; // seconds after scene start
+    const easeOutBack = function (x) {
+      const c1 = 1.70158, c3 = c1 + 1;
+      return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
+    };
+    const easeElastic = function (x) {
+      const c4 = (2 * Math.PI) / 3;
+      return x === 0 ? 0 : x === 1 ? 1
+        : Math.pow(2, -10 * x) * Math.sin((x * 10 - 0.75) * c4) + 1;
+    };
+    const clamp01 = (v) => v < 0 ? 0 : v > 1 ? 1 : v;
+
+    const sceneProgress = clamp01;
+    // Hull appears between tH0 and tH1 (seconds); parts follow with stagger.
+    const tH0 = 0.2, tH1 = 1.7, tP0 = 0.5, tP1 = 1.7;
+
+    window.__renderFrame = function (p) {
+      const t = p * DUR;
+      // Scene-level intro: rotate + scale from 0.1 to 1 (power4.out feel).
+      const sceneK = easeOutBack(clamp01((t - 0) / 1.2));
+      const sceneScale = 0.1 + 0.9 * sceneK;
+      svg.setAttribute('style', `transform: scale(${sceneScale}) rotate(${(1 - sceneK) * -180}deg); transform-origin: 50% 50%;`);
+
+      if (hull) {
+        const hK = easeElastic(clamp01((t - tH0) / (tH1 - tH0)));
+        hull.setAttribute('opacity', String(hK));
+        hull.setAttribute('style', `transform: scale(${hK}); transform-origin: 50% 50%;`);
+      }
+
+      parts.forEach((part, i) => {
+        const d = clamp01((t - (tP0 + i * 0.012)) / (tP1 - tP0));
+        const k = easeOutBack(d);
+        const angle = (i % 13) * 0.483 + 0.7;      // deterministic pseudo-random
+        const dist = 8000 + (i % 17) * 700;
+        const x0 = Math.cos(angle) * dist;
+        const y0 = Math.sin(angle) * dist;
+        const sx = 0.05 + 0.95 * k;
+        const sy = 4.0 - 3.0 * k;
+        part.setAttribute('opacity', String(clamp01(d * 3)));
+        part.setAttribute('style',
+          `transform: translate(${x0 * (1 - k)}px, ${y0 * (1 - k)}px) scaleX(${sx}) scaleY(${sy}) rotate(${90 * (1 - k)}deg); ` +
+          `transform-origin: 50% 50%;`);
+      });
+
+      return t;
+    };
+
+    // Render the final frame by default (progress 1) so a single screenshot
+    // after load is the assembled result.
+    window.__renderFrame(1);
+
+    // Snapshot the current SVG state to a transparent PNG data URL at the
+    // viewport size. Used by the host to write each sequence frame.
+    window.__snapshotFrame = function () {
+      const svg = document.querySelector('svg');
+      const canvas = document.createElement('canvas');
+      canvas.width = document.documentElement.clientWidth;
+      canvas.height = document.documentElement.clientHeight;
+      const ctx = canvas.getContext('2d');
+      const data = new XMLSerializer().serializeToString(svg);
+      const url = URL.createObjectURL(new Blob([data], { type: 'image/svg+xml;charset=utf-8' }));
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          URL.revokeObjectURL(url);
+          resolve(canvas.toDataURL('image/png'));
+        };
+        img.src = url;
+      });
+    };
+
+    return { frames: Math.ceil(DUR * FPS), duration: DUR };
+  };
+</script>
+</body>
+</html>
